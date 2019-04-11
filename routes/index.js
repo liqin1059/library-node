@@ -23,10 +23,12 @@ router.post('/login', (req, res) => {
       doc.comparePassword(req.body.password, function(err, isMatch) {
         if (err) return console.log(err);
         if (isMatch) {
+          req.session.name = req.body.name;
           res.json({
             code: '0000',
             data: {
-              name: req.body.name
+              name: req.body.name,
+              token: req.session
             },
             desc: '登录成功'
           });

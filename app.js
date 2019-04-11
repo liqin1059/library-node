@@ -5,12 +5,15 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var session = require('express-session');
+// var bodyParser = require('body-parser');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var booksRouter = require('./routes/books');
 
 var app = express();
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -22,6 +25,39 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(function(req, res, next){
+  req.session._garbage = Date();
+  req.session.touch();
+  if (!req.session.name) {
+    res.json({
+      code: '0004',
+      data: null,
+      desc: 'session认证失败，请重新登录'
+    });
+  }
+  next();
+});
+
+// session中间件
+app.use(session({
+  secret: 'secret message',
+  resave: true,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 3,
+    secure: false
+  }
+}));
+
+// app.use(function (req, res, next) {
+//   var url = req.originalUrl;
+//   if (url != "/" && undefined == req.session.user) {
+//         res.send('<script>top.location.href="/";</script>');　　　　　　//解决内嵌iframe时session拦截问题
+//         return;
+//     }
+//   next();
+// });
+
 app.use('/', indexRouter);
 app.use('/user', usersRouter);
 app.use('/books', booksRouter);
@@ -29,6 +65,7 @@ app.use('/books', booksRouter);
 //设置跨域访问
 app.all('*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
   res.header("X-Powered-By",' 3.2.1')

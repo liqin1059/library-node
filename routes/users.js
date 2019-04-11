@@ -106,4 +106,15 @@ router.get('/search', (req, res, next) => {
     });
   });
 });
+// 退出登录
+router.get('/logout', function(req, res) {
+  req.session.destroy(function(err) {
+    if (err) return console.log(err);
+    res.json({
+      code: '0000',
+      data: {},
+      desc: '退出登录成功'
+    });
+  });
+});
 module.exports = router;
