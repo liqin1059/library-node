@@ -110,4 +110,8 @@ router.get('/search', (req, res) => {
       });
     });
 });
+// 上传图片
+router.post('/upload', (req, res) => {
+  console.log(req.files[0]);
+});
 module.exports = router;

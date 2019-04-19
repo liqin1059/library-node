@@ -6,6 +6,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
+// var loginMiddleware = require('./middlewares/login');
 // var bodyParser = require('body-parser');
 
 var indexRouter = require('./routes/index');
@@ -24,19 +25,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use(function(req, res, next){
-  req.session._garbage = Date();
-  req.session.touch();
-  if (!req.session.name) {
-    res.json({
-      code: '0004',
-      data: null,
-      desc: 'session认证失败，请重新登录'
-    });
-  }
-  next();
-});
+// app.use(loginMiddleware);
 
 // session中间件
 app.use(session({
@@ -44,15 +33,35 @@ app.use(session({
   resave: true,
   saveUninitialized: false,
   cookie: {
-    maxAge: 1000 * 60 * 3,
+    maxAge: 1000 * 60 * 120,
     secure: false
   }
 }));
 
+app.use(function(req, res, next){
+  if (req.url === '/login') {
+    // 登录的页面
+    next();
+  } else {
+    if (req.session.name) {
+      next();
+    } else {
+      req.session._garbage = Date();
+      req.session.touch();
+      console.log(req.session.name);
+      res.json({
+        code: '0004',
+        data: null,
+        desc: 'session认证失败，请重新登录'
+      });
+    }
+  }
+});
+
 // app.use(function (req, res, next) {
 //   var url = req.originalUrl;
 //   if (url != "/" && undefined == req.session.user) {
-//         res.send('<script>top.location.href="/";</script>');　　　　　　//解决内嵌iframe时session拦截问题
+//         res.send('<script>top.location.href="/";</script>'); //解决内嵌iframe时session拦截问题
 //         return;
 //     }
 //   next();
